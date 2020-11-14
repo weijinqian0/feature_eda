@@ -32,11 +32,15 @@ test_data = pd.read_csv(test_data_file, sep='\t', encoding='utf-8')
 # print(train_data.columns)
 # paint_box(train_data, train_data.columns)
 
-from sklearn.linear_model import Ridge
+# from sklearn.linear_model import Ridge
 
-X_train = train_data.iloc[:, 0:-1]
-y_train = train_data.iloc[:, -1]
-outliers = find_outliers(Ridge(), X_train, y_train)
+# X_train = train_data.iloc[:, 0:-1]
+# y_train = train_data.iloc[:, -1]
+# outliers = find_outliers(Ridge(), X_train, y_train)
+
+# paint_dist(train_data, train_data.columns[:2])
+
+paint_heatmap(train_data, ['V5', 'V9', 'V11', 'V17', 'V22', 'V28'])
 
 if __name__ == '__main__':
     pass

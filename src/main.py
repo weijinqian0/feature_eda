@@ -38,8 +38,10 @@ test_data = pd.read_csv(test_data_file, sep='\t', encoding='utf-8')
 # y_train = train_data.iloc[:, -1]
 # outliers = find_outliers(Ridge(), X_train, y_train)
 
+# 直方图
 # paint_dist(train_data, train_data.columns[:2])
 
+# 热力图
 paint_heatmap(train_data, ['V5', 'V9', 'V11', 'V17', 'V22', 'V28'])
 
 if __name__ == '__main__':

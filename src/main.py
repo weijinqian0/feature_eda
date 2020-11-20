@@ -10,8 +10,8 @@ from scipy import stats
 
 import warnings
 
-from src.base_data_info import *
-from src.view_utils import *
+from src.feature_handle.base_data_info import *
+from src.feature_handle.view_utils import *
 
 warnings.filterwarnings("ignore")
 

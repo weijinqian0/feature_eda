@@ -86,7 +86,7 @@ def stacking_reg(clf, train_x, train_y, test_x, folds, clf_name, kf, label_split
                 'colsample_bytree': 0.7,
                 'colsample_bylevel': 0.7,
                 'learning_rate': 0.03,
-                'tree_method': 'extract',
+                'tree_method': 'exact',
                 'seed': 2017,
                 'nthread': 12,
                 'silent': True
@@ -103,6 +103,8 @@ def stacking_reg(clf, train_x, train_y, test_x, folds, clf_name, kf, label_split
                 )
 
                 pre = model.predict(te_x, num_iteration=model.best_iteration).reshape(-1, 1)
+                train[test_index] = pre
+                test_pre[i, :] = model.predict(test_x, num_iteration=model.best_iteration).reshape(-1, 1)
                 cv_scores.append(mean_squared_error(te_y, pre))
 
         else:
@@ -171,12 +173,12 @@ def lr_reg(x_train, y_train, x_valid, kf, label_split=None):
 
 
 def xgb_reg(x_train, y_train, x_valid, kf, label_split=None):
-    xgb_train, xgb_test = stacking_reg(xgboost, x_train, y_train, x_valid, 'lr', kf, label_split=label_split)
+    xgb_train, xgb_test = stacking_reg(xgboost, x_train, y_train, x_valid, 'xgb', kf, label_split=label_split)
     return xgb_train, xgb_test, 'xgb_reg'
 
 
 def lgb_reg(x_train, y_train, x_valid, kf, label_split=None):
-    lgb_train, lgb_test = stacking_reg(lightgbm, x_train, y_train, x_valid, 'lr', kf, label_split=label_split)
+    lgb_train, lgb_test = stacking_reg(lightgbm, x_train, y_train, x_valid, 'lgb', kf, label_split=label_split)
     return lgb_train, lgb_test, 'lgb_reg'
 
 

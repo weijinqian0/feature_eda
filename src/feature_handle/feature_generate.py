@@ -59,7 +59,7 @@ def reduce_mem_usage(df: DataFrame, verbose=True):
     return df
 
 
-list_join_func = lambda x: " ".join([str[i] for i in x])
+list_join_func = lambda x: " ".join([str(i) for i in x])
 
 # 将需要聚合groupby处理的列写成dict
 agg_dict = {

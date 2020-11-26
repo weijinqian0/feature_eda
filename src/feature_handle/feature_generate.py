@@ -82,6 +82,14 @@ rename_dict = {
 
 
 def merge_list(df_ID, join_columns, df_data: DataFrame, agg_dict, rename_dict):
+    """
+    :param df_ID: 目标数据
+    :param join_columns: 聚合指定数组，可以传入数组，也可以传入str
+    :param df_data: 序列型的数据源
+    :param agg_dict: 数据源根据对应的id来进行分组，分组之后的数据使用这里的value进行聚合
+    :param rename_dict: 聚合之后的数据命名
+    :return: 将生产出的特征融合到原始数据中
+    """
     df_data = df_data.groupby(join_columns).agg(agg_dict).reset_index().rename(columns=rename_dict)
     df_ID = df_ID.merge(df_data, on=join_columns, how='left')
     return df_ID

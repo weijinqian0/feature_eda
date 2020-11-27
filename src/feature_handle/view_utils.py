@@ -19,7 +19,7 @@ warnings.filterwarnings("ignore")
 """
 
 
-# 绘制箱型图
+# 绘制箱型图，看单个
 def paint_box(data, columns):
     length = len(columns)
     column = data.columns.tolist()[:length]

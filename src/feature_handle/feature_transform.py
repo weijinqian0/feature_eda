@@ -104,7 +104,7 @@ def boxcox(data):
     :return:
     """
     columns = list(data.columns)
-    data[columns] = data[columns].apply(scale_minmax(), axis=0)
+    data[columns] = data[columns].apply(scale_minmax, axis=0)
     for var in list(data.columns):
         trans_var, lambda_var = stats.boxcox(data[var].dropna() + 1)
         trans_var = scale_minmax(trans_var)

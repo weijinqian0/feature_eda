@@ -168,3 +168,9 @@ def paint_heatmap(data: DataFrame, drop_columns):
     hm = plt.subplots(figsize=(10, 10))
     hm = sns.heatmap(data_1[cols].corr(), annot=True, square=True)
     plt.show()
+
+
+def paint_violin(data: DataFrame, column):
+    plt.figure(figsize=[16, 10])
+    sns.violinplot(x=data['label'], y=data[column])
+    plt.show()

@@ -83,6 +83,7 @@ rename_dict = {
 
 def merge_list(df_ID, join_columns, df_data: DataFrame, agg_dict, rename_dict):
     """
+    这个函数是把每个id相关的行都列出来，这样可以根据id学习出一个word2vec
     :param df_ID: 目标数据
     :param join_columns: 聚合指定数组，可以传入数组，也可以传入str
     :param df_data: 序列型的数据源
@@ -93,6 +94,48 @@ def merge_list(df_ID, join_columns, df_data: DataFrame, agg_dict, rename_dict):
     df_data = df_data.groupby(join_columns).agg(agg_dict).reset_index().rename(columns=rename_dict)
     df_ID = df_ID.merge(df_data, on=join_columns, how='left')
     return df_ID
+
+
+def add_agg_feature_names(df: DataFrame, df_group: DataFrame, group_cols, value_col, agg_ops, col_names):
+    """
+    统计特征处理函数
+    :param df: 添加特征的dataframe
+    :param df_group: 特征生成数的数据集
+    :param group_cols: group by的列
+    :param value_col: 被统计的列
+    :param agg_ops:处理方式，包括count,mean,sum,std,max,min,nunique
+    :param col_names:新特征的名称
+    :return:
+    """
+    df_group[value_col] = df_group[value_col].astype('float')
+    df_agg = pd.DataFrame(df_group.groupby(group_cols)[value_col].agg(agg_ops)).reset_index()
+
+    df_agg.columns = group_cols + col_names
+    df = df.merge(df_agg, on=group_cols, how='left')
+    return df
+
+
+def add_agg_feature(df: DataFrame, df_group: DataFrame, group_cols, value_col, agg_ops, keyword):
+    col_names = []
+    for op in agg_ops:
+        col_names.append(keyword + '_' + value_col + '_' + op)
+    df = add_agg_feature_names(df, df_group, group_cols, value_col, agg_ops, col_names)
+    return df
+
+
+def add_count_new_feature(df: DataFrame, df_group: DataFrame, group_cols, new_feature_name):
+    """
+    因为count的函数比较多，因此开发专门提取count特征的函数
+    :param df:
+    :param df_group:
+    :param group_cols:
+    :param new_feature_name:
+    :return:
+    """
+    df_group[new_feature_name] = 1
+    df_group = df_group.groupby(group_cols).agg('sum').reset_index()
+    df = df.merge(df_group, on=group_cols, how='left')
+    return df
 
 
 """
@@ -281,108 +324,6 @@ def get_mean_w2v(df_data: DataFrame, columns, model, size):
     return pd.DataFrame(data_array)
 
 
-
-
 if __name__ == "__main__":
-    test_data = pd.read_csv('data/demo3_data/data_format1/test_format1.csv')
-    train_data = pd.read_csv('data/demo3_data/data_format1/train_format1.csv')
-
-    user_info = pd.read_csv('data/demo3_data/data_format1/user_info_format1.csv')
-    user_log = pd.read_csv('data/demo3_data/data_format1/user_log_format1.csv')
-
-    all_data = train_data.append(test_data)
-    all_data = all_data.merge(user_info, on=['user_id'], how='left')
-    del train_data, test_data, user_info
-    gc.collect()
-
-    # 用户行为日志先按时间排好序，然后直接生成路径序列
-    user_log = user_log.sort_values(['user_id', 'time_stamp'])
-    all_data = merge_list(all_data, 'user_id', user_log, agg_dict, rename_dict)
-
-    all_data_test = all_data.head(2000)
-
-    # 店铺特征统计！！！统计与店铺特点有关的特征，如店铺、商品、品牌等
-    # 统计用户点击、浏览、加购、购买行为
-    # 总次数
-    all_data_test = user_cnt(all_data_test, 'seller_path', 'user_cnt')
-    # 不同店铺个数
-    all_data_test = user_nunique(all_data_test, 'seller_path', 'seller_nunique')
-    # 不同品牌的个数
-    all_data_test = user_nunique(all_data_test, 'cat_path', 'cat_nunique')
-    # 不同品类的个数
-    all_data_test = user_nunique(all_data_test, 'brand_path', 'brand_nunique')
-    # 不同商品的个数
-    all_data_test = user_nunique(all_data_test, 'item_path', 'item_nunique')
-    # 活跃天数
-    all_data_test = user_nunique(all_data_test, 'time_stamp_path', 'time_stamp_nunique')
-    # 不同用户行为种数
-    all_data_test = user_nunique(all_data_test, 'action_type_path', 'action_type_nunique')
-    # 最晚时间
-    all_data_test = user_max(all_data_test, 'action_type_path', 'time_stamp_max')
-    # 最早时间
-    all_data_test = user_min(all_data_test, 'action_type_path', 'time_stamp_min')
-    # 活跃天数方差
-    all_data_test = user_std(all_data_test, 'action_type_path', 'time_stamp_std')
-    # 最早与最晚相差天数
-    all_data_test['time_stamp_range'] = all_data_test['time_stamp_max'] - all_data_test['time_stamp_min']
-    # 用户最喜欢的店铺
-    all_data_test = user_most_n(all_data_test, 'seller_path', 'seller_most_1', n=1)
-    # 最喜欢的品牌
-    all_data_test = user_most_n(all_data_test, 'cat_path', 'cat_most_1', n=1)
-    # 最常见的行为动作
-    all_data_test = user_most_n(all_data_test, 'brand_path', 'brand_most_1', n=1)
-    # 用户最喜欢的店铺  行为次数
-    all_data_test = user_most_n_cnt(all_data_test, 'seller_path', 'seller_most_1_cnt', n=1)
-    # 用户最喜欢的类目 行为次数
-    all_data_test = user_most_n_cnt(all_data_test, 'cat_path', 'cat_most_1_cnt', n=1)
-    # 最喜欢的品牌 行为次数
-    all_data_test = user_most_n_cnt(all_data_test, 'brand_path', 'brand_most_1_cnt', n=1)
-    # 最常见的行为动作 行为次数
-    all_data_test = user_most_n_cnt(all_data_test, 'action_type_path', 'action_most_1_cnt', n=1)
-
-    # 用户统计特征：对用户的点击、加购、购买、收藏等特征进行统计
-    # 点击次数
-    all_data_test = user_col_cnt(all_data_test, ['seller_path'], '0', 'user_cnt_0')
-    # 加购次数
-    all_data_test = user_col_cnt(all_data_test, ['seller_path'], '1', 'user_cnt_1')
-
-    # ...
-    print(all_data_test.columns)
-
-    from sklearn.feature_extraction.text import CountVectorizer
-    from sklearn.feature_extraction.text import TfidfVectorizer
-    from sklearn.feature_extraction.text import ENGLISH_STOP_WORDS
-    from scipy import sparse
-
-    tfidfVec = TfidfVectorizer(stop_words=ENGLISH_STOP_WORDS, ngram_range=(1, 1), max_features=100)
-    columns_list = ['seller_path']
-    for i, col in enumerate(columns_list):
-        tfidfVec.fit(all_data_test[col])
-        data_ = tfidfVec.transform(all_data_test[col])
-        if i == 0:
-            data_cat = data_
-        else:
-            data_cat = sparse.hstack((data_cat, data_))
-
-    df_tdidf = pd.DataFrame(data_cat.toarray())
-
-    # 特征重命名与特征合并
-    df_idf = pd.DataFrame(data_cat.toarray())
-    df_tdidf.columns = ['tfidf_' + str(i) for i in df_tdidf.columns]
-    all_data_test = pd.concat([all_data_test, df_tdidf], axis=1)
-
-    # 嵌入特征
-    import gensim
-
-    model = gensim.models.Word2Vec(all_data_test['seller_path'].apply(lambda x: x.split(' ')),
-                                   size=100, window=5,
-                                   min_count=5, workers=4)
-
-    model.save('product2vec.model')
-    model = gensim.models.Word2Vec.load("product2vec.model")
-
-    df_embedding = get_mean_w2v(all_data_test, 'seller_path', model, 100)
-    df_embedding.columns = ['embedding_' + str(i) for i in df_embedding.columns]
-
-    all_data_test = pd.concat([all_data_test, df_embedding], axis=1)
+    pass
 

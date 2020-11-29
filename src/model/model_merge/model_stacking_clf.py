@@ -1,6 +1,12 @@
 """
 模型融合代码
 """
+import itertools
+import matplotlib.pyplot as plt
+from matplotlib import gridspec
+
+from mlxtend.classifier import EnsembleVoteClassifier
+from mlxtend.plotting import plot_decision_regions
 from sklearn.model_selection import KFold
 import pandas as pd
 import numpy as np
@@ -16,6 +22,31 @@ from sklearn.metrics import log_loss
 
 # 基础代码
 from sklearn.naive_bayes import GaussianNB
+from sklearn.svm import SVC
+
+
+def vote_clf(x_train, y_train, x_valid, kf, label_split=None):
+    clf1 = LogisticRegression(random_state=0,
+                              solver='lbfgs', multi_class='auto')
+    clf2 = RandomForestClassifier(random_state=0, n_estimators=100)
+    clf3 = SVC(random_state=0, probability=True, gamma='auto')
+    eclf = EnsembleVoteClassifier(clfs=[clf1, clf2, clf3],
+                                  weights=[2, 1, 1],
+                                  voting='soft')
+
+    gs = gridspec.GridSpec(1, 4)
+    fig = plt.figure(figsize=(16, 4))
+
+    for clf, lab, grd in zip(
+            [clf1, clf2, clf3, eclf],
+            ['Logistic Regression', 'Random Forest',
+             'RBF kernel SVM', 'Ensemble'],
+            itertools.product([0, 1], repeat=2)):
+        clf.fit(x_train, y_train)
+        ax = plt.subplot(gs[0, grd[0] * 2 + grd[1]])
+        fig = plot_decision_regions(X=x_train, y=y_train, clf=clf, legend=2)
+        plt.title(lab)
+    plt.show()
 
 
 def stacking_clf(clf, train_x, train_y, test_x, folds, clf_name, kf, label_split=None):

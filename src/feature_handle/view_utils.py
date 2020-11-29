@@ -119,22 +119,22 @@ def paint_kde(train_data, test_data, column: str, y):
     ax = ax.legend('train', 'test')
 
 
-def paint_reg(train_data, column: str, y):
+def paint_reg(train_data, column: str, y_name='target'):
     """
     绘制线性回归关系
+    :param y_name:
     :param train_data:
-    :param column:
-    :param y:
+    :param column: 训练数据所在的列名
     :return:
     """
     fools = 2
     frows = 1
     plt.figure(figsize=(8, 4), dpi=50)
     ax = plt.subplot(1, 2, 1)
-    sns.regplot(x=column, y=y, data=train_data, ax=ax, scatter_kws={'marker': '.', 's': 3, 'alpha': 0.3},
+    sns.regplot(x=column, y=y_name, data=train_data, ax=ax, scatter_kws={'marker': '.', 's': 3, 'alpha': 0.3},
                 line_kws={'color': 'k'})
     plt.xlabel(column)
-    plt.ylabel(y)
+    plt.ylabel(y_name)
 
     ax = plt.subplot(1, 2, 2)
     sns.displot(train_data[column].dropna())
@@ -143,9 +143,10 @@ def paint_reg(train_data, column: str, y):
     plt.show()
 
 
-def paint_heatmap(data: DataFrame, drop_columns):
+def paint_heatmap(data: DataFrame, drop_columns,k):
     """
     绘制热力图
+    :type k: 阈值k
     :return:
     """
     pd.set_option("display.max_columns", 10)
@@ -162,7 +163,6 @@ def paint_heatmap(data: DataFrame, drop_columns):
     # plt.show()
 
     # 这个是top10的热力图
-    k = 10
     cols = data_corr.nlargest(k, 'target')['target'].index
     cm = np.corrcoef(data_1[cols].values.T)
     hm = plt.subplots(figsize=(10, 10))

@@ -1,9 +1,10 @@
 import matplotlib
+from pandas import DataFrame
 
 from sklearn.preprocessing import StandardScaler, MinMaxScaler, Normalizer, Binarizer, OneHotEncoder
 from sklearn.preprocessing import PolynomialFeatures, FunctionTransformer
-from numpy import log1p
 from sklearn.impute import SimpleImputer
+import numpy as np
 
 matplotlib.use('TkAgg')
 from scipy import stats
@@ -85,16 +86,16 @@ def poly_transform(data):
     return PolynomialFeatures().fit_transform(data)
 
 
-def log_transform(data):
+def log_transform(data: np.ndarray):
     """
     对数变化，非常有用，对于分布不均的，类似gama函数，长尾的数据
-    :param data:
+    :param data: 这里的类型是np.ndarray 千万不要用错
     :return:
     """
-    return FunctionTransformer(log1p, validate=False).fit_transform(data)
+    return FunctionTransformer(np.log1p, validate=False).fit_transform(data)
 
 
-def boxcox(data):
+def boxcox(data: DataFrame):
     """
     boxcox使用场景：线性回归要求数据服从正太分布
     解释：对于线性回归模型,当因变量服从正态分布,误差项满足高斯–马尔科夫条件（零均值、等方差、不相关）时,回归参数的最小二乘估计是一致最小方差无偏估计.

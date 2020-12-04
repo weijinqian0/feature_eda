@@ -19,15 +19,21 @@ warnings.filterwarnings("ignore")
 """
 
 
-# 绘制箱型图
+# 绘制箱型图，看单个
 def paint_box(data, columns):
+    """
+    直接看指定的列的箱型图
+    :param data:
+    :param columns:
+    :return:
+    """
     length = len(columns)
-    column = data.columns.tolist()[:length]
     fig = plt.figure(figsize=(80, 60), dpi=75)
     for i in range(length):
-        plt.subplot(7, 8, i + 1)
-        sns.boxplot(data[column[i]], orient="v", width=0.5)
-        plt.ylabel(column[i], fontsize=36)
+        # 需要根据绘制的图片个数调整
+        plt.subplot(4, 6, i + 1)
+        sns.boxplot(data=pd.DataFrame(data[columns[i]]), orient="v", width=0.5)
+        plt.ylabel(columns[i], fontsize=12)
     plt.show()
 
 
@@ -86,16 +92,18 @@ def find_outliers(model, X, y, sigma=3):
 # 绘制直方图和QQ图 都是用来看数据分布是否是正太分布的
 def paint_dist(data, columns, cols=6):
     rows = len(columns)
-    plt.figure(figsize=(4 * cols, 4 * rows))
+    plt.figure(figsize=(60, 20), dpi=50)
 
     i = 0
     for col in columns:
+        print(data[col])
+        # if np.all(data[col]) == 0:
+        #     continue
         i += 1
-        ax = plt.subplot(rows, cols, i)
+        ax = plt.subplot(7, 6, i)
         sns.distplot(data[col], fit=stats.norm)
-
         i += 1
-        ax = plt.subplot(rows, cols, i)
+        ax = plt.subplot(7, 6, i)
         res = stats.probplot(data[col], plot=plt)
 
     plt.tight_layout()

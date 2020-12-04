@@ -23,7 +23,7 @@ def base_head(data):
 
 
 def base_describe(data):
-    return data.describe()
+    return data.describe(include='all')
 
 
 def base_isnull(data):

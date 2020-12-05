@@ -4,7 +4,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from pandas import DataFrame
 
-from sklearn.metrics import mean_squared_error
+from sklearn.metrics import mean_squared_error, roc_curve, auc
 
 matplotlib.use('TkAgg')
 import seaborn as sns
@@ -218,3 +218,17 @@ def paint_kde(train_data, test_data, column: str, y):
     ax.set_xlabel(column)
     ax.set_ylabel(y)
     ax = ax.legend('train', 'test')
+
+
+def paint_auc_curve(y_label, y_proba, color, index):
+    """
+    ROC 曲线绘制
+    :param y_label:
+    :param y_proba:
+    :param color:
+    :param index: 第几个图片
+    :return:
+    """
+    fpr, tpr, thresholds = roc_curve(y_label, y_proba)
+    roc_auc = auc(fpr, tpr)
+    plt.plot(fpr, tpr, lw=2, color=color, label='ROC fold %d (area = %0.4f)' % (index, roc_auc))

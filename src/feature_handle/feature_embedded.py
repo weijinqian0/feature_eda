@@ -4,6 +4,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import train_test_split
 import lightgbm
 import pandas as pd
+from xgboost import XGBClassifier
 
 """
 特征嵌入的方式
@@ -27,14 +28,96 @@ def penalty_embedded(train, target):
     return SelectFromModel(LogisticRegression(penalty="l1", C=0.1)).fit_transform(train, target)
 
 
-def tree_embedded(train, target):
+def tree_embedded(train, target, columns, threshold='mean'):
     """
-    使用树模型进行特征选择
-    :param data:
+    使用树模型gbdt进行特征选择
+    补充特征选择的代码
+    :param columns: 特征名称
+    :param threshold: 其实就是selectFromModel的阈值
+    :param train:
     :param target:
     :return:
     """
-    return SelectFromModel(GradientBoostingClassifier()).fit_transform(train, target)
+    # SelectFromModel
+    clf = GradientBoostingClassifier(n_estimators=50, random_state=100)
+    clf.fit(train, target)
+    sfm = SelectFromModel(clf, prefit=True, threshold=threshold)
+    # 这里其实就是已经执行了特征选择，直接返回选择之后的结果
+    matrix_x = sfm.transform(train)
+
+    # how much features whose feature importance is not zero
+    feature_score_dict = {}
+    for fn, s in zip(columns, clf.feature_importances_):
+        feature_score_dict[fn] = s
+    m = 0
+    for k in feature_score_dict:
+        if feature_score_dict[k] == 0.0:
+            m += 1
+    print('number of not-zero features:' + str(len(feature_score_dict) - m))
+
+    # 特征重要度排序
+    feature_score_dict_sorted = sorted(feature_score_dict.items(), key=lambda d: d[1], reverse=True)
+
+    # 选择的特征
+    how_long = matrix_x.shape[1]
+    feature_used_dict_temp = feature_score_dict_sorted[:how_long]
+    feature_used_name = []
+    for ii in range(len(feature_used_dict_temp)):
+        feature_used_name.append(feature_used_dict_temp[ii][0])
+
+    # 没有选择的特征
+    feature_not_used_name = []
+    for i in range(len(columns)):
+        if columns[i] not in feature_used_name:
+            feature_not_used_name.append(columns[i])
+
+    return matrix_x, feature_score_dict_sorted, feature_used_name, feature_not_used_name
+
+
+def xgb_embedded(train, target, columns, threshold='mean'):
+    """
+        使用树模型gbdt进行特征选择
+        补充特征选择的代码
+        :param columns: 特征名称
+        :param threshold: 其实就是selectFromModel的阈值
+        :param train:
+        :param target:
+        :return:
+        """
+    # SelectFromModel
+    clf = XGBClassifier(n_estimators=50, random_state=100)
+    clf.fit(train, target)
+    sfm = SelectFromModel(clf, prefit=True, threshold=threshold)
+    # 这里其实就是已经执行了特征选择，直接返回选择之后的结果
+    matrix_x = sfm.transform(train)
+
+    # how much features whose feature importance is not zero
+    feature_score_dict = {}
+    for fn, s in zip(columns, clf.feature_importances_):
+        feature_score_dict[fn] = s
+    m = 0
+    for k in feature_score_dict:
+        if feature_score_dict[k] == 0.0:
+            m += 1
+    print('number of not-zero features:' + str(len(feature_score_dict) - m))
+
+    # 特征重要度排序
+    feature_score_dict_sorted = sorted(feature_score_dict.items(), key=lambda d: d[1], reverse=True)
+
+    # 选择的特征
+    how_long = matrix_x.shape[1]
+    feature_used_dict_temp = feature_score_dict_sorted[:how_long]
+    feature_used_name = []
+    for ii in range(len(feature_used_dict_temp)):
+        feature_used_name.append(feature_used_dict_temp[ii][0])
+
+    # 没有选择的特征
+    feature_not_used_name = []
+    for i in range(len(columns)):
+        if columns[i] not in feature_used_name:
+            feature_not_used_name.append(columns[i])
+
+    return matrix_x, feature_score_dict_sorted, feature_used_name, feature_not_used_name
 
 
 def et_embedded(train, target, test):

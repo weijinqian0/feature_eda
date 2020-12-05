@@ -58,5 +58,26 @@ def reduce_mem_usage(df: DataFrame, verbose=True):
     return df
 
 
+def columns_drop(data, columns_to_drop):
+    """
+    删除部分列
+    :param data:
+    :param columns_to_drop:
+    :return:
+    """
+    for col in columns_to_drop:
+        data.drop(col, axis=1, inplace=True)
+
+
+def to_csv(data: DataFrame, path):
+    """
+    按照csv格式保存到文件中，并去掉index
+    :param data:
+    :param path:
+    :return:
+    """
+    data.to_csv(path, sep='\t', index=False)
+
+
 if __name__ == "__main__":
     print(count_cn_words('😣'))

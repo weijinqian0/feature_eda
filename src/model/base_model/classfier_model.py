@@ -18,6 +18,7 @@ from sklearn.datasets import make_classification
 from sklearn.datasets import load_breast_cancer
 from sklearn.datasets import make_gaussian_quantiles
 from sklearn import metrics
+from sklearn.utils.multiclass import type_of_target
 from sklearn.metrics import f1_score
 
 

@@ -5,6 +5,7 @@ from sklearn.model_selection import train_test_split
 import lightgbm
 import pandas as pd
 from xgboost import XGBClassifier
+from lightgbm import LGBMClassifier
 
 """
 特征嵌入的方式
@@ -129,6 +130,44 @@ def et_embedded(train, target, test):
     print('训练数据未特征筛选维度', train.shape)
     print('训练数据特征筛选维度', train_sel.shape)
     print(clf.feature_importances_[:10])
+
+
+def lgb_embeded_1(train, target, columns, threshold='mean'):
+    # SelectFromModel
+    clf = LGBMClassifier(n_estimators=50, random_state=100)
+    clf.fit(train, target)
+    sfm = SelectFromModel(clf, prefit=True, threshold=threshold)
+    # 这里其实就是已经执行了特征选择，直接返回选择之后的结果
+    matrix_x = sfm.transform(train)
+
+    # how much features whose feature importance is not zero
+    feature_score_dict = {}
+    for fn, s in zip(columns, clf.feature_importances_):
+        feature_score_dict[fn] = s
+    m = 0
+    for k in feature_score_dict:
+        if feature_score_dict[k] == 0.0:
+            m += 1
+    print('number of not-zero features:' + str(len(feature_score_dict) - m))
+
+    # 特征重要度排序
+    feature_score_dict_sorted = sorted(
+        feature_score_dict.items(), key=lambda d: d[1], reverse=True)
+
+    # 选择的特征
+    how_long = matrix_x.shape[1]
+    feature_used_dict_temp = feature_score_dict_sorted[:how_long]
+    feature_used_name = []
+    for ii in range(len(feature_used_dict_temp)):
+        feature_used_name.append(feature_used_dict_temp[ii][0])
+
+    # 没有选择的特征
+    feature_not_used_name = []
+    for i in range(len(columns)):
+        if columns[i] not in feature_used_name:
+            feature_not_used_name.append(columns[i])
+
+    return matrix_x, feature_score_dict_sorted, feature_used_name, feature_not_used_name
 
 
 def lgb_embeded(train, target, test, topK):

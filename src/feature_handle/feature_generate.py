@@ -21,6 +21,20 @@ warnings.filterwarnings('ignore')
 
 list_join_func = lambda x: " ".join([str(i) for i in x])
 
+
+def list_time_interval_join_func(x):
+    times = sorted([int(i) for i in x if str(i).isdigit()])
+    cur_time = ''
+    intervals = []
+    for idx, time in enumerate(times):
+        if idx == 0:
+            cur_time = time
+        else:
+            intervals.append(int(time) - int(cur_time))
+
+    return " ".join([str(i) for i in intervals])
+
+
 # 将需要聚合groupby处理的列写成dict
 agg_dict = {
     'item_id': list_join_func,
@@ -108,7 +122,7 @@ def cnt_(x):
     try:
         return len(x.split(' '))
     except:
-        return -1
+        return 0
 
 
 # 定义统计数据唯一值总数
@@ -116,7 +130,7 @@ def nunique_(x):
     try:
         return len(set(x.split(' ')))
     except:
-        return -1
+        return 0
 
 
 # 统计数据序列中最大的值
@@ -124,7 +138,7 @@ def max_(x):
     try:
         return np.max([float(i) for i in x.split(' ')])
     except:
-        return -1
+        return 0
 
 
 # 统计数据序列中最小的值
@@ -132,7 +146,14 @@ def min_(x):
     try:
         return np.min([float(i) for i in x.split(' ')])
     except:
-        return -1
+        return 0
+
+
+def mean_(x):
+    try:
+        return np.mean([float(i) for i in x.split(' ')])
+    except:
+        return 0
 
 
 # 标准差
@@ -140,7 +161,7 @@ def std_(x):
     try:
         return np.std([float(i) for i in x.split(' ')])
     except:
-        return -1
+        return 0
 
 
 # 定义统计数据中topN 数据的函数
@@ -148,7 +169,7 @@ def most_n(x, n):
     try:
         return Counter(x.split(' ')).most_common(n)[n - 1][0]
     except:
-        return -1
+        return 0
 
 
 #  定义统计数据中topN数据总数的函数
@@ -156,7 +177,23 @@ def most_n_cnt(x, n):
     try:
         return Counter(x.split(' ')).most_common(n)[n - 1][1]
     except:
-        return -1
+        return 0
+
+
+def type_ratio(x, type1, type2):
+    try:
+        c = Counter(x.split(' '))
+        return round(c[type1] / (c[type2] + 1), 2)
+    except:
+        return 0
+
+
+def type_count(x, type1):
+    try:
+        c = Counter(x.split(' '))
+        return c[type1]
+    except:
+        return 0
 
 
 def user_cnt(df_data, single_col, name):
@@ -179,6 +216,11 @@ def user_min(df_data, single_col, name):
     return df_data
 
 
+def user_mean(df_data, single_col, name):
+    df_data[name] = df_data[single_col].apply(mean_)
+    return df_data
+
+
 def user_std(df_data, single_col, name):
     df_data[name] = df_data[single_col].apply(std_)
     return df_data
@@ -192,6 +234,20 @@ def user_most_n(df_data, single_col, name, n=1):
 
 def user_most_n_cnt(df_data, single_col, name, n=1):
     func = lambda x: most_n_cnt(x, n)
+    df_data[name] = df_data[single_col].apply(func)
+    return df_data
+
+
+def user_type_ratio(df_data, single_col, name, type1, type2):
+    def func(x): return type_ratio(x, type1, type2)
+
+    df_data[name] = df_data[single_col].apply(func)
+    return df_data
+
+
+def user_type_count(df_data, single_col, name, type1):
+    def func(x): return type_count(x, type1)
+
     df_data[name] = df_data[single_col].apply(func)
     return df_data
 

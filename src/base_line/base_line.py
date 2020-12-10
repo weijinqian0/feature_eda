@@ -2,10 +2,9 @@ import pandas as pd
 
 from sklearn.utils import shuffle
 
-from src.feature_handle.base_data_info import base_info, base_describe
+from src.base_line.feature import feature_preprocessor
 from src.feature_handle.base_utils import columns_drop, to_csv
-from src.feature_handle.feature_embedded import lgb_embeded_1
-from src.model.statistic_model.classfier_model import LrClassifier, KnnClassifier, LgbmClassifier
+from src.model.statistic_model.classfier_model import LrClassifier, KnnClassifier, LgbmClassifier, RFClassifier
 
 
 def get_model_features():
@@ -20,13 +19,6 @@ def get_model_features():
             'comment_score_0_cross']
 
 
-def feature_select(name, train_data, target, feature_name):
-    if name == "lgb":
-        return lgb_embeded_1(train_data, target, feature_name, '0.1*mean')
-    else:
-        return train_data, target, feature_name, []
-
-
 def classifier_model(model_name):
     if model_name == 'lr':
         return LrClassifier()
@@ -34,6 +26,8 @@ def classifier_model(model_name):
         return KnnClassifier()
     elif model_name == 'lgb':
         return LgbmClassifier()
+    elif model_name == 'rf':
+        return RFClassifier()
 
 
 def train_model(data_train, data_predict, result_path, model_path, threshold=0.5, label='label',
@@ -45,10 +39,12 @@ def train_model(data_train, data_predict, result_path, model_path, threshold=0.5
     :param data_predict:
     :return:
     """
-
-    X, y, X_test, len_feature_choose, data_predict_user_id = feature_preprocessor(data_train, data_predict, label)
+    data_predict_user_id = data_predict['uid']
+    columns_drop(data_predict, ['uid'])
+    # 去做特征选择了 这里其实
+    X, y, X_test = feature_preprocessor(data_train, data_predict, label)
     # 选择一个模型
-    model_name = 'lgb'
+    model_name = 'rf'
     model = classifier_model(model_name)
 
     model.fit(X, y)
@@ -59,57 +55,16 @@ def train_model(data_train, data_predict, result_path, model_path, threshold=0.5
     predict_label, predict_proba = model.predict(X_test)
 
     # 保存预测之后的概率值
-    result_file_name = result_path + str(model_name) + '_features_' + str(len_feature_choose) + '_proba.csv'
+    result_file_name = result_path + str(model_name) + '_proba.csv'
     result_data = pd.concat(
         [data_predict_user_id, pd.DataFrame(predict_proba)], axis=1)
     to_csv(result_data, result_file_name)
 
     # 保存预测结果，卡了阈值之后的结果
-
-    result_file_name = result_path + str(model_name) + '_features_' + str(
-        len_feature_choose) + '_proba_to_label_using_th_' + str(threshold) + '.csv'
+    result_file_name = result_path + str(model_name) + '_proba_to_label_using_th_' + str(threshold) + '.csv'
     result_data = pd.concat(
         [data_predict_user_id, pd.DataFrame(predict_label)], axis=1)
     to_csv(result_data, result_file_name)
-
-
-def feature_preprocessor(data_train, data_predict, label_name):
-    """
-    数据预处理
-    :return:
-    """
-    data_train_without_label = data_train.drop(label_name, axis=1)
-
-    feature_name = list(data_train_without_label.columns.values)
-    data_predict_user_id = data_predict['uid']
-
-    # 用test和train数据进行数值填充
-    data_all = pd.concat([data_train_without_label, data_predict])
-
-    data_train_filled = data_train_without_label.fillna(
-        value=data_all.median())
-
-    print(base_info(data_train))
-    print(base_describe(data_train))
-    data_train.dropna(axis=1)
-
-    # 特征构建
-    x_temp = data_train_filled.iloc[:, :].values
-    y = data_train.iloc[:, -1].values
-
-    # 特征选择
-    X, feature_score_dict_sorted, feature_used_name, feature_not_used_name = feature_select(
-        '', x_temp, y, feature_name)
-
-    print(feature_used_name)
-    print(feature_not_used_name)
-    dropped_feature_name = feature_not_used_name
-    dropped_feature_name.append('uid')
-    len_feature_choose = len(feature_used_name)
-    data_predict_filled = data_predict.fillna(value=data_all.median())
-    X_test = columns_drop(data_predict_filled, dropped_feature_name).values
-
-    return X, y, X_test, len_feature_choose, data_predict_user_id
 
 
 if __name__ == "__main__":

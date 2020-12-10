@@ -144,13 +144,19 @@ class LrClassifier(BaseModel):
 class KnnClassifier(BaseModel):
 
     def get_origin_model(self):
-        return KNeighborsClassifier(n_neighbors=3)
+        return KNeighborsClassifier(n_neighbors=6)
 
     def get_model_name(self):
         return 'knn_Classifier'
 
     def data_process(self, data):
-        return super().data_process(data)
+        """
+        数据归一化
+        :param data:
+        :return:
+        """
+        transfer = StandardScaler()
+        return transfer.fit_transform(data)
 
 
 class GaussianNBClassifier(BaseModel):
@@ -162,7 +168,13 @@ class GaussianNBClassifier(BaseModel):
         return 'GaussianNB'
 
     def data_process(self, data):
-        return super().data_process(data)
+        """
+        数据归一化
+        :param data:
+        :return:
+        """
+        transfer = StandardScaler()
+        return transfer.fit_transform(data)
 
 
 class DTClassifier(BaseModel):
@@ -174,7 +186,13 @@ class DTClassifier(BaseModel):
         return 'DecisionTreeClassifier'
 
     def data_process(self, data):
-        return super().data_process(data)
+        """
+        数据归一化
+        :param data:
+        :return:
+        """
+        transfer = StandardScaler()
+        return transfer.fit_transform(data)
 
 
 class RFClassifier(BaseModel):
@@ -186,7 +204,13 @@ class RFClassifier(BaseModel):
         return 'RandomForestClassifier'
 
     def data_process(self, data):
-        return super().data_process(data)
+        """
+        数据归一化
+        :param data:
+        :return:
+        """
+        transfer = StandardScaler()
+        return transfer.fit_transform(data)
 
 
 class ETClassifier(BaseModel):
@@ -198,7 +222,13 @@ class ETClassifier(BaseModel):
         return 'RandomForestClassifier'
 
     def data_process(self, data):
-        return super().data_process(data)
+        """
+        数据归一化
+        :param data:
+        :return:
+        """
+        transfer = StandardScaler()
+        return transfer.fit_transform(data)
 
 
 class AdaClassifier(BaseModel):
@@ -210,7 +240,69 @@ class AdaClassifier(BaseModel):
         return 'AdaBoostClassifier'
 
     def data_process(self, data):
-        return super().data_process(data)
+        """
+        数据归一化
+        :param data:
+        :return:
+        """
+        transfer = StandardScaler()
+        return transfer.fit_transform(data)
+
+
+class LgbmClassifier(BaseModel):
+
+    def get_origin_model(self):
+        return lgb
+
+    def get_model_name(self):
+        return 'lgbm'
+
+    def data_process(self, data):
+        pass
+
+    def fit(self, train_data, label):
+        print(type(train_data))
+        print(type(label))
+        train_data, test_data, train_target, test_target = train_test_split(train_data,
+                                                                            label,
+                                                                            test_size=0.2,
+                                                                            random_state=0)
+        print(train_target)
+        print(type(train_target))
+        train_matrix = self.clf.Dataset(train_data, label=pd.Series(train_target))
+        test_matrix = self.clf.Dataset(test_data, label=pd.Series(test_target))
+        params = {
+            'boosting_type': 'gbdt',
+            'objective': 'multiclass',
+            'metric': 'multi_logloss',
+            'min_child_weight': 1.5,
+            'num_leaves': 2 ** 5,
+            'lambda_l2': 10,
+            'subsample': 0.7,
+            'colsample_bytree': 0.7,
+            'colsample_bylevel': 0.7,
+            'learning_rate': 0.03,
+            'tree_method': 'exact',
+            'seed': 2017,
+            'num_class': 2,
+            'silent': True
+        }
+
+        num_round = 100
+        early_stopping_rounds = 100
+        self._model = self.clf.train(params, train_matrix, num_round, valid_sets=test_matrix,
+                                     early_stopping_rounds=early_stopping_rounds)
+
+    def predict_proba(self, data):
+        return self._model.predict(data, num_iteration=self._model.best_iteration)
+
+    def save_model(self, model_path):
+        ver = datetime.datetime.now().strftime('%Y-%m-%d%H:%M:%S')
+        model_path += (self.model_name + '_' + str(ver) + '.m')
+        self._model.save_model(model_path)
+
+    def load_model(self, model_path):
+        return self.clf.Booster(model_file=model_path)
 
 
 def gbdt_model(train_data, train_target, test_data, test_target):

@@ -67,6 +67,7 @@ def columns_drop(data, columns_to_drop):
     """
     for col in columns_to_drop:
         data.drop(col, axis=1, inplace=True)
+    return data
 
 
 def to_csv(data: DataFrame, path):

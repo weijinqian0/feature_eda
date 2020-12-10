@@ -1,5 +1,8 @@
+import datetime
+import pickle
+
 from sklearn.neighbors import KNeighborsClassifier
-from sklearn.metrics import log_loss
+from sklearn.metrics import log_loss, classification_report
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
@@ -21,45 +24,193 @@ from sklearn import metrics
 from sklearn.utils.multiclass import type_of_target
 from sklearn.metrics import f1_score
 
-
-def lr_model(train_data, train_target, test_data, test_target):
-    clf = LogisticRegression(random_state=0, solver='lbfgs', multi_class='multinomial').fit(train_data, train_target)
-    clf.score(test_data, test_target)
+from src.model.model_interface import IModel
+from abc import ABCMeta, abstractmethod
 
 
-def knn_model(train_data, train_target, test_data, test_target):
-    clf = KNeighborsClassifier(n_neighbors=3).fit(train_data, train_target)
-    clf.score(test_data, test_target)
+class BaseModel(metaclass=ABCMeta):
+    """
+        逻辑回归模型
+        """
+
+    def __init__(self) -> None:
+        self.clf = self.get_origin_model()
+        self.model_name = self.get_model_name()
+
+    @abstractmethod
+    def get_origin_model(self):
+        pass
+
+    @abstractmethod
+    def get_model_name(self):
+        pass
+
+    def data_process(self, data):
+        return data
+
+    def fit(self, train_data, label):
+        train_data = self.data_process(train_data)
+        self._model = self.clf.fit(train_data, label)
+
+    def predict(self, data, threshold=0.5):
+        predict_proba = self.predict_proba(data)[:, 1]
+        predict_label = []
+        for i in range(len(predict_proba)):
+            if predict_proba[i] > threshold:
+                predict_label.append(1)
+            else:
+                predict_label.append(0)
+        return predict_label, predict_proba
+
+    def predict_and_metric(self, data, label):
+        y = label
+        y_pred = self.predict_proba(data)[:, 1]
+        for throd in [0.4, 0.45, 0.5, 0.6, 0.7, 0.8, 0.9]:
+            print("lr evaluate throd:", throd)
+            y_pred_binary = (y_pred >= throd) * 1
+            print('AUC: %.4f' % metrics.roc_auc_score(y, y_pred_binary))
+            print('ACC: %.4f' % metrics.accuracy_score(y, y_pred_binary))
+            print('Recall: %.4f' % metrics.recall_score(
+                y, y_pred_binary))  # average="micro"
+            print('Precesion: %.4f' %
+                  metrics.precision_score(y, y_pred_binary))
+            print('F1-score: %.4f' % metrics.f1_score(y, y_pred_binary))
+            print(classification_report(y, y_pred_binary))
+
+    def predict_proba(self, data):
+        data = self.data_process(data)
+        return self._model.predict_proba(data)
+
+    def metrics(self, data):
+        super().metrics(data)
+
+    def cv_val(self, data):
+        cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=0)
+        for train_idx, val_idx in cv.split(X, y):
+            self.fit(X[train_idx], y[train_idx])
+            self.predict_and_metric(X[val_idx], y[val_idx])
+
+    def save_model(self, model_path):
+        """
+        模型保存位置
+        :param model_path:
+        :return:
+        """
+        ver = datetime.datetime.now().strftime('%Y-%m-%d%H:%M:%S')
+        model_path += (self.model_name + '_' + str(ver) + '.pkl')
+        BaseModel.save_model_with_pickle(self._model, model_path)
+
+    def load_model(self, model_path):
+        return BaseModel.load_model_with_pickle(model_path)
+
+    @staticmethod
+    def save_model_with_pickle(model, model_path):
+        """
+            保存下模型
+            """
+        with open(model_path, 'wb') as wf:
+            pickle.dump(model, wf)
+
+    @staticmethod
+    def load_model_with_pickle(model_path):
+        """
+        返回加载的模型
+        """
+        with open(model_path, 'rb') as f:
+            return pickle.load(f)
 
 
-def gnb_model(train_data, train_target, test_data, test_target):
-    clf = GaussianNB().fit(train_data, train_target)
-    clf.score(test_data, test_target)
+class LrClassifier(BaseModel):
+    """
+    逻辑回归模型
+    """
+
+    def get_origin_model(self):
+        return LogisticRegression(random_state=0, solver='lbfgs', multi_class='multinomial')
+
+    def get_model_name(self):
+        return 'lr'
+
+    def data_process(self, data):
+        """
+        数据归一化
+        :param data:
+        :return:
+        """
+        transfer = StandardScaler()
+        return transfer.fit_transform(data)
 
 
-def decision_tree_model(train_data, train_target, test_data, test_target):
-    clf = DecisionTreeClassifier()
-    clf.fit(train_data, train_target)
-    clf.score(test_data, test_target)
+class KnnClassifier(BaseModel):
+
+    def get_origin_model(self):
+        return KNeighborsClassifier(n_neighbors=3)
+
+    def get_model_name(self):
+        return 'knn_Classifier'
+
+    def data_process(self, data):
+        return super().data_process(data)
 
 
-def random_foreat_model(train_data, train_target, test_data, test_target):
-    clf = RandomForestClassifier(n_estimators=10, max_depth=None, min_samples_split=2, random_state=0)
-    clf = clf.fit(train_data, train_target)
+class GaussianNBClassifier(BaseModel):
 
-    clf.score(test_data, test_target)
+    def get_origin_model(self):
+        return GaussianNB()
+
+    def get_model_name(self):
+        return 'GaussianNB'
+
+    def data_process(self, data):
+        return super().data_process(data)
 
 
-def et_model(train_data, train_target, test_data, test_target):
-    clf = ExtraTreesClassifier(n_estimators=10, max_depth=None, min_samples_split=2, random_state=0)
-    clf = clf.fit(train_data, train_target)
-    clf.score(test_data, test_target)
+class DTClassifier(BaseModel):
+
+    def get_origin_model(self):
+        return DecisionTreeClassifier(n_neighbors=3)
+
+    def get_model_name(self):
+        return 'DecisionTreeClassifier'
+
+    def data_process(self, data):
+        return super().data_process(data)
 
 
-def ada_model(train_data, train_target, test_data, test_target):
-    clf = AdaBoostClassifier(n_estimators=100)
-    clf = clf.fit(train_data, train_target)
-    clf.score(test_data, test_target)
+class RFClassifier(BaseModel):
+
+    def get_origin_model(self):
+        return RandomForestClassifier(n_estimators=10, max_depth=None, min_samples_split=2, random_state=0)
+
+    def get_model_name(self):
+        return 'RandomForestClassifier'
+
+    def data_process(self, data):
+        return super().data_process(data)
+
+
+class ETClassifier(BaseModel):
+
+    def get_origin_model(self):
+        return ExtraTreesClassifier(n_estimators=10, max_depth=None, min_samples_split=2, random_state=0)
+
+    def get_model_name(self):
+        return 'RandomForestClassifier'
+
+    def data_process(self, data):
+        return super().data_process(data)
+
+
+class AdaClassifier(BaseModel):
+
+    def get_origin_model(self):
+        return AdaBoostClassifier(n_estimators=100)
+
+    def get_model_name(self):
+        return 'AdaBoostClassifier'
+
+    def data_process(self, data):
+        return super().data_process(data)
 
 
 def gbdt_model(train_data, train_target, test_data, test_target):

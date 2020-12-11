@@ -5,7 +5,7 @@ import pandas as pd
 from sklearn.utils import shuffle
 from pandas import DataFrame
 
-from src.base_line.feature import feature_preprocessor
+from src.coco.feature import feature_preprocessor
 from src.feature_handle.base_utils import columns_drop, to_csv
 from src.model.statistic_model.classfier_model import LrClassifier, KnnClassifier, LgbmClassifier, RFClassifier
 from src.util import write_json, read_json

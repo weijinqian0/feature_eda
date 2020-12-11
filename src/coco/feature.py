@@ -14,32 +14,62 @@ from src.feature_handle.feature_embedded import lgb_embeded_1
 """
 
 
-class OnlineFeatureHandler():
+class OnlineFeatureHandler(object):
     """
     在线特征处理，在调整模型的时候，需要调整某些特征的处理，或者临时需要添加某些特征
+    承担了切分的功能
     """
 
-    def __init__(self, data_path, label_name):
-        self.data = pd.read_csv(data_path, sep='\t')
+    def __init__(self, label_name, data=None, data_path=None):
+        if data is None:
+            if data_path is not None:
+                self.data = pd.read_csv(data_path, sep='\t')
+            else:
+                raise BaseException('Data path is none.')
+        else:
+            self.data = data
         self.label_name = label_name
+        self.data_y = self.data[label_name]
+        self.data_X = self.data.drop(label_name, axis=1)
+        self.columns = self.data_X.columns.tolist()
+        self.feature_used_name = []
+
+    def info(self):
+        print(base_info(self.data))
+        print(base_describe(self.data))
 
     def fill_nan(self):
-        return self.data
+        return self.data_X.fillna(self.data_X.median())
 
     def feature_filter(self):
-        return self.data
+        return self.data_X
 
     def feature_select(self):
-        return self.data
+        X = self.data_X.values
+        y = self.data_y.values
+        X, feature_score_dict_sorted, feature_used_name, feature_not_used_name \
+            = feature_select('', X, y, self.columns)
+        data_X = pd.DataFrame(X, columns=feature_used_name)
+
+        self.feature_used_name = feature_used_name
+        print("当前选中的特征维度" + str(len(feature_used_name)))
+        print(feature_used_name)
+        print(feature_not_used_name)
+
+        return data_X
 
     def feature_generate(self):
-        return self.data
+        return self.data_X
 
     def pipeline(self):
-        self.data = self.fill_nan()
-        self.data = self.feature_generate()
-        self.data = self.feature_filter()
-        self.data = self.feature_select()
+        self.info()
+        self.data_X = self.fill_nan()
+        self.data_X = self.feature_generate()
+        self.data_X = self.feature_filter()
+        self.data_X = self.feature_select()
+
+    def output(self):
+        return self.data_X, self.data_y, self.feature_used_name
 
 
 class OfflineFeatureHandler(object):
@@ -50,8 +80,6 @@ class OfflineFeatureHandler(object):
 
     def __init__(self, data_path, saved_path):
         self.data = pd.read_csv(data_path, sep='\t')
-        self.data_X = None
-        self.data_y = None
         self.saved_path = saved_path
 
     def fill_nan(self):
@@ -86,50 +114,11 @@ class OfflineFeatureHandler(object):
             self.save_data('feature_select')
 
 
-def fill_nan(train_data: DataFrame, label_name):
-    """
-    缺失值处理
-    :param train_data:
-    :param label_name:
-    :return:
-    """
-    train_target = train_data[label_name]
-    train_data = train_data.drop(label_name, axis=1)
-    train_data.fillna(value=train_data.median())
-
-    return train_data, train_target
-
-
 def feature_select(name, train_data: DataFrame, target, feature_name):
     if name == "lgb":
         return lgb_embeded_1(train_data, target, feature_name, '0.1*mean')
     else:
         return train_data, target, feature_name, []
-
-
-def feature_preprocessor(data_train, label_name, select_fun=''):
-    """
-    数据预处理
-    :type select_fun: str 特征选择的方法
-    :return:
-    """
-
-    print(base_info(data_train))
-    print(base_describe(data_train))
-
-    # 填充nan
-    train_data, train_target = fill_nan(data_train, label_name)
-
-    X = train_data.values
-    y = train_target.values
-    # 特征选择
-    X, feature_score_dict_sorted, feature_used_name, feature_not_used_name = feature_select(
-        select_fun, X, y, train_data.columns.tolist())
-
-    print("当前选中的特征维度" + str(len(feature_used_name)))
-    print(feature_used_name)
-    print(feature_not_used_name)
-    return X, y, feature_used_name
 
 
 if __name__ == "__main__":

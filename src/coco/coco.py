@@ -5,7 +5,7 @@ import pandas as pd
 from sklearn.utils import shuffle
 from pandas import DataFrame
 
-from src.coco.feature import feature_preprocessor
+from src.coco.feature import OnlineFeatureHandler
 from src.feature_handle.base_utils import columns_drop, to_csv
 from src.model.statistic_model.classfier_model import LrClassifier, KnnClassifier, LgbmClassifier, RFClassifier
 from src.util import write_json, read_json
@@ -72,7 +72,9 @@ class Coco(object):
         :param predict_data:
         :return:
         """
-        return feature_preprocessor(train_data, self._label_name)
+        handler = OnlineFeatureHandler(label_name=self._label_name, data=train_data)
+        handler.pipeline()
+        return handler.output()
 
     def train_and_predict(self, is_save_model=True, threshold=0.5):
         self.train(is_save_model)
@@ -164,5 +166,5 @@ if __name__ == "__main__":
         model_name='lr'
 
     )
-    # coco.train(True)
+    coco.train(True)
     coco.predict(True)

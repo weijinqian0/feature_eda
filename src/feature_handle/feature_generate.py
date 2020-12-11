@@ -22,6 +22,9 @@ warnings.filterwarnings('ignore')
 list_join_func = lambda x: " ".join([str(i) for i in x])
 
 
+def content_join_func(x): return "----".join([str(i) for i in x])
+
+
 def list_time_interval_join_func(x):
     times = sorted([int(i) for i in x if str(i).isdigit()])
     cur_time = ''

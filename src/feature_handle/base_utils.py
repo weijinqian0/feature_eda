@@ -19,6 +19,20 @@ def count_cn_words(data):
     return count
 
 
+def count_cn_uniq(data):
+    """
+    获取中文字个数
+    """
+    if not isinstance(data, str):
+        return 0
+    cn_uniq = []
+    for s in data:
+        # 中文字符范围
+        if u'\u4e00' <= s <= u'\u9fff':
+            cn_uniq.append(s)
+    return len(set(cn_uniq))
+
+
 # 降低内存存储大小的
 def reduce_mem_usage(df: DataFrame, verbose=True):
     """

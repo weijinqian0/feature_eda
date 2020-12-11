@@ -71,6 +71,18 @@ def paint_dist(data, columns, cols=6):
     plt.show()
 
 
+def paint_dist_single(data, column, bins):
+    """
+    绘制单个变量的分布
+    :param data:
+    :param column:
+    :param bins:可以是数字、序列。bins = [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 2]
+    :return:
+    """
+    plt.hist(data[column], bins=bins)
+    plt.show()
+
+
 """
 双变量
 """

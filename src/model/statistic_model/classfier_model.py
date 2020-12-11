@@ -36,6 +36,7 @@ class BaseModel(metaclass=ABCMeta):
     def __init__(self) -> None:
         self.clf = self.get_origin_model()
         self.model_name = self.get_model_name()
+        self._model = None
 
     @abstractmethod
     def get_origin_model(self):
@@ -47,6 +48,9 @@ class BaseModel(metaclass=ABCMeta):
 
     def data_process(self, data):
         return data
+
+    def info(self):
+        return self.model_name
 
     def fit(self, train_data, label):
         train_data = self.data_process(train_data)
@@ -78,11 +82,13 @@ class BaseModel(metaclass=ABCMeta):
             print(classification_report(y, y_pred_binary))
 
     def predict_proba(self, data):
+        if self._model is None:
+            raise BaseException("Model is none. Maybe you hasn't train or load a model.")
         data = self.data_process(data)
         return self._model.predict_proba(data)
 
     def metrics(self, data):
-        super().metrics(data)
+        pass
 
     def cv_val(self, data):
         cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=0)
@@ -99,9 +105,10 @@ class BaseModel(metaclass=ABCMeta):
         ver = datetime.datetime.now().strftime('%Y-%m-%d%H:%M:%S')
         model_path += (self.model_name + '_' + str(ver) + '.pkl')
         BaseModel.save_model_with_pickle(self._model, model_path)
+        return model_path
 
     def load_model(self, model_path):
-        return BaseModel.load_model_with_pickle(model_path)
+        self._model = BaseModel.load_model_with_pickle(model_path)
 
     @staticmethod
     def save_model_with_pickle(model, model_path):

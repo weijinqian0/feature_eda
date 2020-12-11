@@ -1,11 +1,11 @@
-from sklearn.model_selection import GridSearchCV, train_test_split,RandomizedSearchCV
+from sklearn.model_selection import GridSearchCV, train_test_split, RandomizedSearchCV
 from sklearn.metrics import mean_squared_error
 from sklearn.ensemble import RandomForestRegressor
 import pandas as pd
 
 
 def grid_search(model, parameters, train, target):
-    train_data, train_target, test_data, test_target = train_test_split(train, target, test_size=2.0, random_state=0)
+    train_data, train_target, test_data, test_target = train_test_split(train, target, test_size=0.2, random_state=0)
     model.fit(train_data, train_target)
     clf = GridSearchCV(model, parameters, cv=5)
     clf.fit(train_data, train_target)
@@ -16,7 +16,7 @@ def grid_search(model, parameters, train, target):
 
 
 def rand_search(model, parameters, train, target):
-    train_data, train_target, test_data, test_target = train_test_split(train, target, test_size=2.0, random_state=0)
+    train_data, train_target, test_data, test_target = train_test_split(train, target, test_size=0.2, random_state=0)
     model.fit(train_data, train_target)
     clf = RandomizedSearchCV(model, parameters, cv=5)
     clf.fit(train_data, train_target)

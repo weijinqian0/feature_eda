@@ -1,10 +1,13 @@
-from sklearn.metrics import mean_squared_error
-from sklearn.model_selection import KFold, LeaveOneOut, LeavePOut
+from sklearn.metrics import mean_squared_error, confusion_matrix
+from sklearn.model_selection import KFold, LeaveOneOut, LeavePOut, cross_val_score, cross_val_predict
 from sklearn.model_selection import train_test_split
+import numpy as np
+import matplotlib.pyplot as plt
 
 """
 cross_validation
 交叉验证
+通过交叉验证看下模型在训练集上的效果
 """
 
 
@@ -76,3 +79,31 @@ def leavep_cv(train, target, model):
         print(k, "10个", "score_test: ", score_test)
 
 
+def cv_score(train, target, model):
+    """
+    简单的cv验证打分
+    :param train:
+    :param target:
+    :param model:
+    :return:
+    """
+    scores = cross_val_score(model, train, target, scoring='neg_mean_squared_error', cv=10)
+    scores = np.sqrt(-scores)
+    display_scores(scores)
+
+
+def display_scores(scores):
+    print("Scores:", scores)
+    print("Mean:", scores.mean())
+    print("std", scores.std())
+
+
+def display_confusion_matrix(train, target, model):
+    """
+    主要针对多分类的情形，直观观察混淆矩阵
+    :return:
+    """
+    y_train_pred = cross_val_predict(model, train, target, cv=3)
+    conf_mx = confusion_matrix(target, y_train_pred)
+    plt.matshow(conf_mx)
+    plt.show()

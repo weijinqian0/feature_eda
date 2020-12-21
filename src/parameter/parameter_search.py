@@ -13,6 +13,7 @@ def grid_search(model, parameters, train, target):
     print("model gridSearch test MSE: ", score_test)
     print("输出训练时间和验证指标的信息")
     print(sorted(clf.cv_results_.keys()))
+    print(clf.best_params_)
 
 
 def rand_search(model, parameters, train, target):
@@ -24,6 +25,7 @@ def rand_search(model, parameters, train, target):
     print("model gridSearch test MSE: ", score_test)
     print("输出训练时间和验证指标的信息")
     print(sorted(clf.cv_results_.keys()))
+    print(clf.best_params_)
 
 
 if __name__ == "__main__":

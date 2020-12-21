@@ -1,10 +1,12 @@
 import matplotlib
 from pandas import DataFrame
+from sklearn.compose import ColumnTransformer
 
-from sklearn.preprocessing import StandardScaler, MinMaxScaler, Normalizer, Binarizer, OneHotEncoder
+from sklearn.preprocessing import StandardScaler, MinMaxScaler, Normalizer, Binarizer, OneHotEncoder, OrdinalEncoder
 from sklearn.preprocessing import PolynomialFeatures, FunctionTransformer
 from sklearn.impute import SimpleImputer
 import numpy as np
+import pandas as pd
 
 matplotlib.use('TkAgg')
 from scipy import stats
@@ -22,13 +24,14 @@ def scale_minmax(col):
     return (col - col.min()) / (col.max() - col.min())
 
 
-def standard_scale(data):
+def standard_scale(data: DataFrame):
     """
     标准化, x'=x-mean(x)/S S为方差
+    由于fit_transform 之后，得到的是一个numpy array，所以需要使用pandas转换回来
     :param data:
     :return:
     """
-    return StandardScaler().fit_transform(data)
+    return pd.DataFrame(StandardScaler().fit_transform(data), columns=data.columns, index=data.index)
 
 
 def minmax_scale(data):
@@ -37,7 +40,7 @@ def minmax_scale(data):
     :param data:
     :return:
     """
-    return MinMaxScaler().fit_transform(data)
+    return pd.DataFrame(MinMaxScaler().fit_transform(data), columns=data.columns, index=data.index)
 
 
 def normalizer(data):
@@ -46,7 +49,7 @@ def normalizer(data):
     :param data:
     :return:
     """
-    return Normalizer().fit_transform(data)
+    return pd.DataFrame(Normalizer().fit_transform(data), columns=data.columns, index=data.index)
 
 
 def binarizer(data, threshold):
@@ -56,7 +59,7 @@ def binarizer(data, threshold):
     :param threshold:
     :return:
     """
-    return Binarizer(threshold=threshold).fit_transform(data)
+    return pd.DataFrame(Binarizer(threshold=threshold).fit_transform(data), columns=data.columns, index=data.index)
 
 
 def one_hot_encode(data, column):
@@ -66,7 +69,8 @@ def one_hot_encode(data, column):
     :param column:
     :return:
     """
-    return OneHotEncoder(categories='auto').fit_transform(data[column])
+    return pd.DataFrame(OneHotEncoder(categories='auto').fit_transform(data[column]), columns=data.columns,
+                        index=data.index)
 
 
 def nan_handle(data):
@@ -74,7 +78,7 @@ def nan_handle(data):
     缺失值处理，这里默认是平均值填充，但是可以自定义
     :return:
     """
-    return SimpleImputer().fit_transform(data)
+    return pd.DataFrame(SimpleImputer().fit_transform(data), columns=data.columns, index=data.index)
 
 
 def poly_transform(data):
@@ -83,7 +87,27 @@ def poly_transform(data):
     :param data:
     :return:
     """
-    return PolynomialFeatures().fit_transform(data)
+    return pd.DataFrame(PolynomialFeatures().fit_transform(data), columns=data.columns, index=data.index)
+
+
+def ordinal_transform(data, column: str):
+    """
+    将文本信息转换为类别数字信息
+    :param column: 某一列
+    :param data:
+    :return:
+    """
+    return pd.DataFrame(OrdinalEncoder().fit_transform(data[[column]]), columns=data.columns, index=data.index)
+
+
+def column_transform(data, strategy):
+    """
+    可以添加策略，使用统一的策略添加能力，0.20版本以上使用
+    :param data:
+    :param strategy:
+    :return:
+    """
+    return ColumnTransformer(strategy, remainder='passthrough').fit_transform(data)
 
 
 def log_transform(data: np.ndarray):

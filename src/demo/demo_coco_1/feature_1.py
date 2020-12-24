@@ -16,16 +16,16 @@ class Feature1(OfflineFeatureHandler):
                 'content_type', 'content', 'comment_score']
 
     def fill_nan(self):
-        return self.data.dropna()
+        self.data = self.data.dropna()
 
     def feature_filter(self):
-        return self.feature_filter()
+        pass
 
     def feature_select(self):
-        return super().feature_select()
+        pass
 
     def feature_generate(self):
-        return super().feature_generate()
+        self.data = self.feature_generate_1()
 
     def feature_generate_1(self):
         data = self.data
@@ -59,7 +59,8 @@ class Feature1(OfflineFeatureHandler):
         all_data = pd.DataFrame(data['uid'].drop_duplicates())
         print(all_data.shape)
         all_data = merge_list(all_data, 'uid', data, agg_dict, rename_dict)
-        return all_data, True
+        self.save_data(all_data, 'generate_1')
+        return all_data
 
 
 if __name__ == '__main__':

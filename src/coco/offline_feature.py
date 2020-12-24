@@ -17,36 +17,32 @@ class OfflineFeatureHandler(metaclass=ABCMeta):
         self.data.columns = columns
         self.saved_path = saved_path
 
+    @abstractmethod
     def fill_nan(self):
-        return self.data, False
+        pass
 
+    @abstractmethod
     def feature_filter(self):
-        return self.data, False
+        pass
 
+    @abstractmethod
     def feature_select(self):
-        return self.data, False
+        pass
 
+    @abstractmethod
     def feature_generate(self):
-        return self.data, False
+        pass
 
-    def save_data(self, name):
+    def save_data(self, data, name):
         ver = datetime.datetime.now().strftime('%Y-%m-%d%H:%M:%S')
         path = self.saved_path + name + str(ver) + '.csv'
-        to_csv(self.data, path)
+        to_csv(data, path)
 
     def pipeline(self):
-        self.data, is_save = self.fill_nan()
-        if is_save:
-            self.save_data('fill_nan')
-        self.data, is_save = self.feature_generate()
-        if is_save:
-            self.save_data('feature_generate')
-        self.data, is_save = self.feature_filter()
-        if is_save:
-            self.save_data('feature_filter')
-        self.data, is_save = self.feature_select()
-        if is_save:
-            self.save_data('feature_select')
+        self.fill_nan()
+        self.feature_generate()
+        self.feature_filter()
+        self.feature_select()
 
 
 if __name__ == "__main__":

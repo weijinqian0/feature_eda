@@ -2,6 +2,7 @@
 特征处理过程中常用的函数
 """
 from pandas import DataFrame
+import pandas as pd
 import numpy as np
 
 
@@ -82,6 +83,15 @@ def columns_drop(data, columns_to_drop):
     for col in columns_to_drop:
         data.drop(col, axis=1, inplace=True)
     return data
+
+
+def read_csv(path):
+    """
+    从csv中读取文件
+    :param path:
+    :return:
+    """
+    return pd.read_csv(path, sep='\t')
 
 
 def to_csv(data: DataFrame, path):

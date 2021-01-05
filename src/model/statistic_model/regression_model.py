@@ -46,7 +46,7 @@ def lgb_model(train_data, train_target, test_data, test_target):
         learning_rate=0.01,
         max_depth=-1,
         n_estimators=5000,
-        boosting_state='gbdt',
+        boosting_type='gbdt',
         random_state=2019,
         objective='regression'
     )

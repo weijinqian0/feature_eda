@@ -37,6 +37,7 @@ class OfflineFeatureHandler(metaclass=ABCMeta):
         ver = datetime.datetime.now().strftime('%Y-%m-%d%H:%M:%S')
         path = self.saved_path + name + str(ver) + '.csv'
         to_csv(data, path)
+        return path
 
     def pipeline(self):
         self.fill_nan()
@@ -48,5 +49,6 @@ class OfflineFeatureHandler(metaclass=ABCMeta):
 if __name__ == "__main__":
     data_path = ''
     save_path = ''
+    columns = []
     # 离线特征处理并保存
-    OfflineFeatureHandler(data_path, save_path).pipeline()
+    OfflineFeatureHandler(data_path, save_path, columns).pipeline()

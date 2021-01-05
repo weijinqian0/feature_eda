@@ -120,6 +120,20 @@ def add_count_new_feature(df: DataFrame, df_group: DataFrame, group_cols, new_fe
 """
 
 
+def max_in_array(x):
+    try:
+        return np.max([float(i) for i in x])
+    except:
+        return 0
+
+
+def cnt_in_array(x):
+    try:
+        return len(x.split(' '))
+    except:
+        return 0
+
+
 # 统计特征
 def cnt_(x):
     try:

@@ -57,7 +57,7 @@ def paint_dist(data, columns, cols=6):
 
     i = 0
     for col in columns:
-        print(data[col])
+        # print(data[col])
         # if np.all(data[col]) == 0:
         #     continue
         i += 1

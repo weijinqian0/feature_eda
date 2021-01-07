@@ -14,6 +14,7 @@ from scipy import stats
 import gc
 from collections import Counter
 import copy
+import lightgbm as lgb
 
 import warnings
 
@@ -355,6 +356,42 @@ def get_mean_w2v(df_data: DataFrame, columns, model, size):
         data_array.append(w2v)
 
     return pd.DataFrame(data_array)
+
+
+def gbdt_feature(train, target, test):
+    """
+    后面接LR会提升拟合能力
+    :param train:
+    :param target:
+    :param test:
+    :return:
+    """
+    gbm = lgb.LGBMRegressor(objective='regression',
+                            subsample=0.8,
+                            min_child_weight=0.5,
+                            colsample_bytree=0.7,
+                            num_leaves=1000,
+                            learning_rate=0.01,
+                            n_estimators=10,
+                            )
+
+    gbm.fit(train.values, target.values)
+    # early_stopping_rounds = 100,
+    # )
+    model = gbm.booster_
+    gbdt_feats_train = model.predict(train.values, pred_leaf=True)
+    gbdt_feats_test = model.predict(test, pred_leaf=True)
+    gbdt_feats_name = ['gbdt_leaf_' + str(i)
+                       for i in range(gbdt_feats_train.shape[1])]
+    df_train_gbdt_feats = pd.DataFrame(
+        gbdt_feats_train, columns=gbdt_feats_name)
+    df_test_gbdt_feats = pd.DataFrame(gbdt_feats_test, columns=gbdt_feats_name)
+
+    train = pd.concat([train.reset_index(), df_train_gbdt_feats], axis=1)
+    test = pd.concat([test.reset_index(), df_test_gbdt_feats], axis=1)
+    print(train.shape)
+
+    return train, test
 
 
 if __name__ == "__main__":

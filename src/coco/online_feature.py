@@ -35,8 +35,8 @@ class OnlineFeatureHandler(object):
         self.feature_used_name = []
 
     def info(self):
-        print(base_info(self.data))
-        print(base_describe(self.data))
+        base_info(self.data)
+        base_describe(self.data)
 
     def fill_nan(self):
         return self.data_X.fillna(self.data_X.median())

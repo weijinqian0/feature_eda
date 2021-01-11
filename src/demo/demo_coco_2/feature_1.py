@@ -69,8 +69,8 @@ class Feature1(OfflineFeatureHandler):
 
 data = read_csv(origin_path)
 print(data.columns.values.tolist())
-print(base_info(data))
-print(base_describe(data))
+base_info(data)
+base_describe(data)
 
 
 def get_view_columns():
@@ -87,8 +87,8 @@ data = data[data['2nd_max'] <= 80]
 data_pos = data[data['label'] == 1]
 data_neg = data[data['label'] == 0]
 
-print(base_info(data_pos))
-print(base_describe(data_pos))
+base_info(data_pos)
+base_describe(data_pos)
 # paint_dist(data_pos, get_view_columns())
 # paint_dist(data_neg, get_view_columns())
 

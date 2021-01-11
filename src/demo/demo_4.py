@@ -42,8 +42,8 @@ def get_agg_feature_by_uid():
     data = data[data['content_type'] != '\\N']
     data = data[data['time'] != '\\N']
 
-    print(base_info(data))
-    print(base_describe(data))
+    base_info(data)
+    base_describe(data)
 
     def content_join_func(x): return "----".join([str(i) for i in x])
 
@@ -126,8 +126,8 @@ def feature_eda(data: str):
 
     all_data.to_csv(save_final_path, sep='\t', index=False)
 
-    print(base_info(all_data))
-    print(base_describe(all_data))
+    base_info(all_data)
+    base_describe(all_data)
 
     # print(base_info(comments_word_data))
 
@@ -158,8 +158,8 @@ def feature_log():
         'comment_score_min', 'comment_score_std', 'commemt_score_2',
         'commemt_score_1', 'percentage_2', 'percentage_1']
     data = pd.read_csv(save_final_path, sep='\t')
-    print(base_info(data))
-    print(base_describe(data))
+    base_info(data)
+    base_describe(data)
     # data = filter_by_threshold_below(data, thresolds)
     data.replace(-1, 0, inplace=True)
 
@@ -172,8 +172,8 @@ def feature_log():
     print(data.shape)
     data = pd.concat([data[['uid', 'comment_count']], log_data], axis=1)
     data.to_csv(save_log_path, sep='\t', index=False)
-    print(base_info(data))
-    print(base_describe(data))
+    base_info(data)
+    base_describe(data)
 
 
 def filter_by_threshold_greater(data: DataFrame, thresholds):
@@ -224,8 +224,8 @@ def filter_duplicate():
 def get_good_users_log():
     data = pd.read_csv(save_log_path, sep='\t')
     origin_data = pd.read_csv(save_mid_path, sep='\t', encoding='utf-8')
-    print(base_info(data))
-    print(base_describe(data))
+    base_info(data)
+    base_describe(data)
     # 对数阈值
     log_thresholds = {'comment_count': 2.5,
                       'comment_words_max': 5,
@@ -242,8 +242,8 @@ def get_good_users_log():
 
 def good_users_normal():
     data = pd.read_csv(save_final_path, sep='\t')
-    print(base_info(data))
-    print(base_describe(data))
+    base_info(data)
+    base_describe(data)
     # 普通阈值
     data = data[data['comment_count'] >= 10]
     data = data[data['comment_words_max'] >= 50]
@@ -269,8 +269,8 @@ def get_good_users_to_model():
 
 def bad_users_normal():
     data = pd.read_csv(save_final_path, sep='\t')
-    print(base_info(data))
-    print(base_describe(data))
+    base_info(data)
+    base_describe(data)
     data = data[data['comment_count'] <= 5]
     data = data[data['comment_words_mean'] <= 20]
     data = data[data['percentage_0'] >= 1]

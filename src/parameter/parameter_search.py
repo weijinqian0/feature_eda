@@ -5,7 +5,7 @@ import pandas as pd
 
 
 def grid_search(model, parameters, train, target):
-    train_data, train_target, test_data, test_target = train_test_split(train, target, test_size=0.2, random_state=0)
+    train_data, test_data, train_target, test_target = train_test_split(train, target, test_size=0.2, random_state=0)
     model.fit(train_data, train_target)
     clf = GridSearchCV(model, parameters, cv=5)
     clf.fit(train_data, train_target)
@@ -17,7 +17,7 @@ def grid_search(model, parameters, train, target):
 
 
 def rand_search(model, parameters, train, target):
-    train_data, train_target, test_data, test_target = train_test_split(train, target, test_size=0.2, random_state=0)
+    train_data, test_data, train_target, test_target = train_test_split(train, target, test_size=0.2, random_state=0)
     model.fit(train_data, train_target)
     clf = RandomizedSearchCV(model, parameters, cv=5)
     clf.fit(train_data, train_target)

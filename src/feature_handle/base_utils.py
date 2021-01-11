@@ -85,13 +85,16 @@ def columns_drop(data, columns_to_drop):
     return data
 
 
-def read_csv(path):
+def read_csv(path, columns=None):
     """
     从csv中读取文件
     :param path:
     :return:
     """
-    return pd.read_csv(path, sep='\t')
+    if columns is None:
+        return pd.read_csv(path, sep='\t')
+    else:
+        return pd.read_csv(path, sep='\t', names=columns)
 
 
 def to_csv(data: DataFrame, path):

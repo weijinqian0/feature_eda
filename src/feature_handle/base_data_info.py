@@ -15,15 +15,18 @@ warnings.filterwarnings("ignore")
 
 
 def base_info(data):
-    return data.info()
+    with pd.option_context('display.max_columns', 2000):
+        print(data.info())
 
 
 def base_head(data):
-    return data.head()
+    with pd.option_context('display.max_columns', 2000):
+        print(data.head())
 
 
 def base_describe(data):
-    return data.describe(include='all')
+    with pd.option_context('display.max_columns', 2000):
+        print(data.describe(include='all'))
 
 
 def base_isnull(data):
